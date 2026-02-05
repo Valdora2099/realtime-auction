@@ -1,30 +1,23 @@
-    package com.example.demo.Entity;
+package com.example.demo.Entity;
 
-    import com.example.demo.enums.userRoleEnum;
+import jakarta.persistence.*;
+import lombok.Data;
 
-    import jakarta.persistence.*;
-    import lombok.Data;
+@Data
+@Entity
+@Table(name = "users")
+public class UserEntity {
 
-    @Data
-    @Entity
-    @Table(name = "users")
-    public class UserEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userId;
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long userId;
+    @Column(unique = true, nullable = false)
+    private String username;
 
-        private String name;
-        private String email;
-        private String password;
+    @Column(nullable = false)
+    private String password;
 
-        @Enumerated(EnumType.STRING)
-        private userRoleEnum role;
-
-        public void setRole(userRoleEnum role) {
-            this.role = role;
-        }
-        public userRoleEnum getRole() {
-            return role;
-        }
-    }
+    @Column(nullable = false)
+    private String role; // ROLE_ADMIN, ROLE_SELLER, ROLE_BIDDER
+}
