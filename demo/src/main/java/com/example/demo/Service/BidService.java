@@ -2,6 +2,7 @@ package com.example.demo.Service;
 
 import com.example.demo.Entity.BidEntity;
 import com.example.demo.Repository.BidRepository;
+import com.example.demo.dto.Validation;
 
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -10,11 +11,16 @@ import java.util.Optional;
 @Service
 public class BidService {
     
-    
+    AuthorizationService authorizationService;
 
     private BidRepository bidRepository;
-    public BidService(BidRepository bidRepository) {
+    public BidService(BidRepository bidRepository, AuthorizationService authorizationService) {
         this.bidRepository = bidRepository;
+        this.authorizationService = authorizationService;
+    }
+    
+    public void ValidateSeller(Validation requesterId) {
+        authorizationService.authorize(requesterId.getRequesterId(), com.example.demo.enums.userRoleEnum.SELLER);
     }
     
     // Create
