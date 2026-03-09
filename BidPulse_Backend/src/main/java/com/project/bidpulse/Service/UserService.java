@@ -3,6 +3,7 @@ package com.project.bidpulse.Service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.project.bidpulse.Entity.UserEntity;
@@ -14,7 +15,12 @@ public class UserService {
     @Autowired
     private UserRepository repo;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /** Hash password before persisting. */
     public UserEntity insert(UserEntity user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return repo.save(user);
     }
 
@@ -31,7 +37,10 @@ public class UserService {
         if (existing != null) {
             existing.setName(user.getName());
             existing.setEmail(user.getEmail());
-            existing.setPassword(user.getPassword());
+            // Only re-hash if a new password was provided
+            if (user.getPassword() != null && !user.getPassword().isBlank()) {
+                existing.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
             existing.setRole(user.getRole());
             return repo.save(existing);
         }

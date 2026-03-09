@@ -1,54 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { loginUser } from '../api';
+import { IconAlertCircle, IconUser, IconZap, IconLoader } from '../components/Icons';
+import BrandLogo from '../components/BrandLogo';
 import '../styles/Auth.css';
 
 const Login = () => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
+        if (error) setError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
-
         try {
-            // TODO: Replace with actual backend API call
-            // const response = await fetch('http://localhost:8080/auth/login', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify(formData)
-            // });
-            // const data = await response.json();
-
-            // Mock authentication for demonstration
-            const mockUser = {
-                userId: 1,
-                name: 'Test User',
-                email: formData.email,
-                role: 'buyer' // Change to 'admin' or 'seller' to test different dashboards
-            };
-            const mockToken = 'mock-jwt-token-' + Date.now();
-
-            // Store user data and token in localStorage
-            localStorage.setItem('user', JSON.stringify(mockUser));
-            localStorage.setItem('token', mockToken);
-
-            // Redirect based on role
-            navigate(`/${mockUser.role}/dashboard`);
+            const user = await loginUser(formData.email, formData.password);
+            // loginUser() → api.js storeAuth() already saved the real JWT + user
+            navigate(`/${user.role}/dashboard`);
         } catch (err) {
-            setError('Login failed. Please check your credentials.');
+            setError(err.message || 'Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
         }
@@ -57,48 +34,70 @@ const Login = () => {
     return (
         <div className="auth-container">
             <div className="auth-box">
-                <h1>BidPulse Login</h1>
-                <p className="auth-subtitle">Secure authentication with JWT</p>
 
-                {error && <div className="error-message">{error}</div>}
+                <BrandLogo size={36} />
 
-                <form onSubmit={handleSubmit}>
+                <h1>Sign in</h1>
+                <p className="auth-subtitle">Enter your credentials to access your dashboard</p>
+
+                {error && (
+                    <div className="error-message">
+                        <IconAlertCircle size={15} />
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} noValidate>
                     <div className="form-group">
-                        <label>Email</label>
+                        <label htmlFor="login-email">Email address</label>
                         <input
+                            id="login-email"
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            placeholder="Enter your email"
+                            placeholder="you@example.com"
+                            autoComplete="email"
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>Password</label>
+                        <label htmlFor="login-password">Password</label>
                         <input
+                            id="login-password"
                             type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            placeholder="Enter your password"
+                            placeholder="••••••••"
+                            autoComplete="current-password"
                         />
                     </div>
 
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                        {loading ? 'Logging in...' : 'Login'}
+                    <button id="login-submit" type="submit" className="btn-primary" disabled={loading}>
+                        {loading
+                            ? <span className="btn-loading"><IconLoader size={15} className="spin" /> Signing in…</span>
+                            : 'Sign In'}
                     </button>
                 </form>
 
                 <p className="auth-link">
-                    Don't have an account? <Link to="/register">Register here</Link>
+                    Don&apos;t have an account? <Link to="/register">Create one</Link>
                 </p>
 
+                <div className="auth-divider" />
+
                 <div className="security-info">
-                    <p>🔒 Secured with JWT Authentication</p>
-                    <p>🛡️ Role-based Access Control</p>
+                    <div className="security-badge">
+                        <IconUser size={13} />
+                        Role-based Access
+                    </div>
+                    <div className="security-badge">
+                        <IconZap size={13} />
+                        Real-time Bidding
+                    </div>
                 </div>
             </div>
         </div>

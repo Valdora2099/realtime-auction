@@ -1,48 +1,49 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { registerUser } from '../api';
+import { IconAlertCircle, IconCheckCircle, IconLoader, IconShield, IconTag, IconUser } from '../components/Icons';
+import BrandLogo from '../components/BrandLogo';
 import '../styles/Auth.css';
 
+const ROLES = [
+    { value: 'buyer', label: 'Buyer', desc: 'Browse & place bids', Icon: IconUser },
+    { value: 'seller', label: 'Seller', desc: 'List & manage auctions', Icon: IconTag },
+    { value: 'admin', label: 'Admin', desc: 'Platform administration', Icon: IconShield },
+];
+
 const Register = () => {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        role: 'buyer'
-    });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'buyer' });
+    const [confirmPwd, setConfirmPwd] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
+        if (error) setError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        setError(''); setSuccess('');
+
+        if (formData.password !== confirmPwd) {
+            setError('Passwords do not match.');
+            return;
+        }
+        if (formData.password.length < 3) {
+            setError('Password must be at least 3 characters.');
+            return;
+        }
+
         setLoading(true);
-
         try {
-            // TODO: Replace with actual backend API call
-            // const response = await fetch('http://localhost:8080/users/add', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify(formData)
-            // });
-            // const data = await response.json();
-
-            // Mock registration for demonstration
-            console.log('Registering user:', formData);
-
-            // Redirect to login after successful registration
-            setTimeout(() => {
-                navigate('/login');
-            }, 1000);
+            await registerUser(formData);
+            setSuccess('Account created successfully. Redirecting to login…');
+            setTimeout(() => navigate('/login'), 1600);
         } catch (err) {
-            setError('Registration failed. Please try again.');
+            setError(err.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -50,71 +51,79 @@ const Register = () => {
 
     return (
         <div className="auth-container">
-            <div className="auth-box">
-                <h1>BidPulse Register</h1>
-                <p className="auth-subtitle">Create your account</p>
+            <div className="auth-box" style={{ maxWidth: '480px' }}>
 
-                {error && <div className="error-message">{error}</div>}
+                <BrandLogo size={36} />
 
-                <form onSubmit={handleSubmit}>
+                <h1>Create account</h1>
+                <p className="auth-subtitle">Join the real-time auction platform</p>
+
+                {error && <div className="error-message"><IconAlertCircle size={15} />{error}</div>}
+                {success && (
+                    <div className="success-message">
+                        <IconCheckCircle size={15} style={{ flexShrink: 0 }} />{success}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} noValidate>
                     <div className="form-group">
-                        <label>Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            placeholder="Enter your name"
-                        />
+                        <label htmlFor="reg-name">Full name</label>
+                        <input id="reg-name" type="text" name="name" value={formData.name}
+                            onChange={handleChange} required placeholder="John Doe" autoComplete="name" />
                     </div>
 
                     <div className="form-group">
-                        <label>Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                            placeholder="Enter your email"
-                        />
+                        <label htmlFor="reg-email">Email address</label>
+                        <input id="reg-email" type="email" name="email" value={formData.email}
+                            onChange={handleChange} required placeholder="you@example.com" autoComplete="email" />
                     </div>
 
                     <div className="form-group">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                            placeholder="Enter your password"
-                        />
+                        <label htmlFor="reg-password">Password</label>
+                        <input id="reg-password" type="password" name="password" value={formData.password}
+                            onChange={handleChange} required placeholder="••••••••" autoComplete="new-password" />
                     </div>
 
                     <div className="form-group">
-                        <label>Role</label>
-                        <select name="role" value={formData.role} onChange={handleChange}>
-                            <option value="buyer">Buyer</option>
-                            <option value="seller">Seller</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                        <label htmlFor="reg-confirm">Confirm password</label>
+                        <input id="reg-confirm" type="password" value={confirmPwd}
+                            onChange={e => setConfirmPwd(e.target.value)} required placeholder="••••••••" />
                     </div>
 
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                        {loading ? 'Registering...' : 'Register'}
+                    {/* Role picker */}
+                    <div className="form-group">
+                        <label>Account type</label>
+                        <div className="role-cards">
+                            {ROLES.map(({ value, label, desc, Icon }) => (
+                                <div
+                                    key={value}
+                                    id={`role-${value}`}
+                                    className={`role-card ${formData.role === value ? 'active' : ''}`}
+                                    onClick={() => setFormData(p => ({ ...p, role: value }))}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={e => e.key === 'Enter' && setFormData(p => ({ ...p, role: value }))}
+                                >
+                                    <div className="role-icon-wrap">
+                                        <Icon size={18} />
+                                    </div>
+                                    <div className="role-label">{label}</div>
+                                    <div className="role-desc">{desc}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button id="register-submit" type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '4px' }}>
+                        {loading
+                            ? <span className="btn-loading"><IconLoader size={15} className="spin" /> Creating account…</span>
+                            : 'Create Account'}
                     </button>
                 </form>
 
                 <p className="auth-link">
-                    Already have an account? <Link to="/login">Login here</Link>
+                    Already have an account? <Link to="/login">Sign in</Link>
                 </p>
-
-                <div className="security-info">
-                    <p>🔒 Password Encryption</p>
-                    <p>🛡️ Secure Data Storage</p>
-                </div>
             </div>
         </div>
     );

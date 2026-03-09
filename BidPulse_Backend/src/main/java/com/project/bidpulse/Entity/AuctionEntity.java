@@ -1,5 +1,6 @@
 package com.project.bidpulse.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -22,15 +23,16 @@ public class AuctionEntity {
     private LocalDateTime endTime;
 
     private String status;
-
     private Boolean isVerified;
 
     @ManyToOne
     @JoinColumn(name = "seller_id", referencedColumnName = "userId")
+    @JsonIgnoreProperties({ "password", "auctions", "bids" })
     private UserEntity seller;
 
     @ManyToOne
     @JoinColumn(name = "verified_by", referencedColumnName = "userId")
+    @JsonIgnoreProperties({ "password", "auctions", "bids" })
     private UserEntity verifiedBy;
 
     private LocalDateTime verifiedAt;

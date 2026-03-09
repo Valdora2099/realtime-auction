@@ -1,5 +1,6 @@
 package com.project.bidpulse.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -18,9 +19,11 @@ public class BidEntity {
 
     @ManyToOne
     @JoinColumn(name = "auction_id", referencedColumnName = "auctionId")
+    @JsonIgnoreProperties({ "seller", "verifiedBy", "verifiedAt", "bids" })
     private AuctionEntity auction;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    @JsonIgnoreProperties({ "password", "bids", "auctions" })
     private UserEntity user;
 }
